@@ -1,16 +1,23 @@
 <script lang="ts">
-  export let storeInfo: {
-    storeName: string
-    storeCode: string
-    posNo: string
-    currentVersion: string
+  import { invoke } from '@tauri-apps/api/core'
+
+  interface Props {
+    storeInfo: {
+      storeName: string
+      storeCode: string
+      posNo: string
+      currentVersion: string
+    }
+    onLoginSuccess: () => void
   }
 
-  let userId = ''
-  let password = ''
-  let isLoading = false
-  let errorMessage = ''
-  let passwordVisible = false
+  let { storeInfo, onLoginSuccess }: Props = $props()
+
+  let userId = $state('')
+  let password = $state('')
+  let isLoading = $state(false)
+  let errorMessage = $state('')
+  let passwordVisible = $state(false)
 
   async function handleLogin() {
     if (!userId.trim()) {
@@ -25,12 +32,19 @@
     isLoading = true
     errorMessage = ''
 
-    // 실제 환경에서는 Tauri invoke('login', { userId, password }) 호출
-    await new Promise((r) => setTimeout(r, 1800))
-
-    // 임시: 로그인 실패 시뮬레이션
-    isLoading = false
-    errorMessage = '서버에 연결할 수 없습니다. BF 서버 상태를 확인해 주세요.'
+    try {
+      // Rust FB에 로그인 요청 전달
+      const result = await invoke('login', { userId, password })
+      console.log('Login success:', result)
+      
+      // 로그인 성공 시 콜백 호출하여 화면 전환
+      onLoginSuccess()
+    } catch (e) {
+      console.error('Login error:', e)
+      errorMessage = e as string
+    } finally {
+      isLoading = false
+    }
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -39,12 +53,10 @@
 </script>
 
 <div class="login-bg">
-  <!-- 배경 장식 원형 광원 -->
   <div class="glow-orb glow-orb-1"></div>
   <div class="glow-orb glow-orb-2"></div>
 
   <div class="login-card">
-    <!-- 상단 로고 및 앱명 -->
     <div class="brand-header">
       <div class="brand-icon">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -56,7 +68,6 @@
       <span class="brand-name">AstemsSync</span>
     </div>
 
-    <!-- 매장 정보 배지 -->
     <div class="store-badge">
       <div class="store-badge-icon">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -69,13 +80,11 @@
       </div>
     </div>
 
-    <!-- 타이틀 -->
     <div class="login-title-block">
       <h1 class="login-title">로그인</h1>
       <p class="login-subtitle">업데이트 관리를 위해 계정 정보를 입력해 주세요.</p>
     </div>
 
-    <!-- 입력 폼 -->
     <div class="form-group">
       <label for="userId" class="form-label">사용자 ID</label>
       <div class="input-wrapper">
@@ -91,7 +100,7 @@
           class="form-input"
           placeholder="아이디를 입력하세요"
           bind:value={userId}
-          on:keydown={handleKeydown}
+          onkeydown={handleKeydown}
           autocomplete="username"
           disabled={isLoading}
         />
@@ -113,14 +122,14 @@
           class="form-input"
           placeholder="비밀번호를 입력하세요"
           bind:value={password}
-          on:keydown={handleKeydown}
+          onkeydown={handleKeydown}
           autocomplete="current-password"
           disabled={isLoading}
         />
         <button
           type="button"
           class="toggle-password"
-          on:click={() => (passwordVisible = !passwordVisible)}
+          onclick={() => (passwordVisible = !passwordVisible)}
           tabindex="-1"
           aria-label="비밀번호 표시 전환"
         >
@@ -140,7 +149,6 @@
       </div>
     </div>
 
-    <!-- 오류 메시지 -->
     {#if errorMessage}
       <div class="error-banner" role="alert">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -152,12 +160,11 @@
       </div>
     {/if}
 
-    <!-- 로그인 버튼 -->
     <button
       id="btn-login"
       type="button"
       class="btn-primary"
-      on:click={handleLogin}
+      onclick={handleLogin}
       disabled={isLoading}
     >
       {#if isLoading}
@@ -168,7 +175,6 @@
       {/if}
     </button>
 
-    <!-- 버전 정보 -->
     <p class="version-info">AstemsSync v{storeInfo.currentVersion}</p>
   </div>
 </div>
@@ -176,12 +182,12 @@
 <style>
   .login-bg {
     position: relative;
-    width: 100vw;
-    height: 100vh;
+    width: 480px;
+    height: 700px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-bg);
+    background: #0d1117;
     overflow: hidden;
   }
 
@@ -194,14 +200,14 @@
   .glow-orb-1 {
     width: 450px;
     height: 450px;
-    background: rgba(79, 110, 247, 0.18);
+    background: rgba(79, 110, 247, 0.12);
     top: -100px;
     right: -80px;
   }
   .glow-orb-2 {
     width: 350px;
     height: 350px;
-    background: rgba(150, 90, 240, 0.12);
+    background: rgba(150, 90, 240, 0.08);
     bottom: -80px;
     left: -60px;
   }
@@ -209,9 +215,9 @@
   .login-card {
     position: relative;
     z-index: 10;
-    width: 420px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
+    width: 380px;
+    background: #161b22;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
     padding: 36px 40px 32px;
     box-shadow:
@@ -229,17 +235,17 @@
   .brand-icon {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, var(--color-primary), #7c6bef);
+    background: linear-gradient(135deg, #4f6ef7, #7c6bef);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px var(--color-primary-glow);
+    box-shadow: 0 4px 12px rgba(79, 110, 247, 0.3);
   }
   .brand-name {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--color-text);
+    color: #e6edf3;
     letter-spacing: 0.01em;
   }
 
@@ -247,15 +253,15 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    background: var(--color-surface-2);
-    border: 1px solid var(--color-border);
-    border-left: 3px solid var(--color-primary);
+    background: #1e252f;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid #4f6ef7;
     border-radius: 10px;
     padding: 12px 14px;
     margin-bottom: 28px;
   }
   .store-badge-icon {
-    color: var(--color-primary);
+    color: #4f6ef7;
     flex-shrink: 0;
     line-height: 0;
   }
@@ -266,16 +272,16 @@
     min-width: 0;
   }
   .store-name {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    color: var(--color-text);
+    color: #e6edf3;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .store-meta {
-    font-size: 0.72rem;
-    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    color: #8b949e;
     letter-spacing: 0.01em;
   }
 
@@ -285,12 +291,12 @@
   .login-title {
     font-size: 1.45rem;
     font-weight: 700;
-    color: var(--color-text);
+    color: #e6edf3;
     margin-bottom: 4px;
   }
   .login-subtitle {
     font-size: 0.8rem;
-    color: var(--color-text-muted);
+    color: #8b949e;
     line-height: 1.5;
   }
 
@@ -301,7 +307,7 @@
     display: block;
     font-size: 0.8rem;
     font-weight: 500;
-    color: var(--color-text-muted);
+    color: #8b949e;
     margin-bottom: 7px;
     letter-spacing: 0.02em;
   }
@@ -313,25 +319,25 @@
   .input-icon {
     position: absolute;
     left: 13px;
-    color: var(--color-text-muted);
+    color: #8b949e;
     line-height: 0;
     pointer-events: none;
   }
   .form-input {
     width: 100%;
-    background: var(--color-surface-2);
-    border: 1px solid var(--color-border);
+    background: #1e252f;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 11px 40px 11px 40px;
     font-size: 0.9rem;
-    color: var(--color-text);
+    color: #e6edf3;
     font-family: inherit;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   .form-input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-glow);
+    border-color: #4f6ef7;
+    box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.2);
   }
   .form-input:disabled {
     opacity: 0.5;
@@ -347,13 +353,13 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--color-text-muted);
+    color: #8b949e;
     padding: 4px;
     line-height: 0;
     transition: color 0.2s;
   }
   .toggle-password:hover {
-    color: var(--color-text);
+    color: #e6edf3;
   }
 
   .error-banner {
@@ -365,7 +371,7 @@
     border-radius: 8px;
     padding: 10px 13px;
     margin-bottom: 16px;
-    color: var(--color-error);
+    color: #f85149;
     font-size: 0.8rem;
     animation: shake 0.3s ease;
   }
@@ -377,7 +383,7 @@
 
   .btn-primary {
     width: 100%;
-    background: linear-gradient(135deg, var(--color-primary), #6a5af9);
+    background: linear-gradient(135deg, #4f6ef7, #6a5af9);
     border: none;
     border-radius: 10px;
     padding: 13px;
@@ -391,13 +397,13 @@
     gap: 8px;
     font-family: inherit;
     transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
-    box-shadow: 0 4px 15px var(--color-primary-glow);
+    box-shadow: 0 4px 15px rgba(79, 110, 247, 0.25);
     margin-top: 4px;
     letter-spacing: 0.01em;
   }
   .btn-primary:hover:not(:disabled) {
     opacity: 0.92;
-    box-shadow: 0 6px 20px var(--color-primary-glow);
+    box-shadow: 0 6px 20px rgba(79, 110, 247, 0.35);
     transform: translateY(-1px);
   }
   .btn-primary:active:not(:disabled) {
@@ -424,7 +430,7 @@
   .version-info {
     text-align: center;
     font-size: 0.72rem;
-    color: rgba(139, 148, 158, 0.45);
+    color: rgba(139, 148, 158, 0.4);
     margin-top: 18px;
     letter-spacing: 0.02em;
   }
