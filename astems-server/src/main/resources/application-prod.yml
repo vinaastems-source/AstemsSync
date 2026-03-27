@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@PROD_DB_IP:1521:XE # 프로덕션 DB 상세 주소는 .env 또는 환경변수 주입 권장
+    driver-class-name: oracle.jdbc.OracleDriver
+    username: PROD_USER
+    password: PROD_PASSWORD
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: validate # 프로덕션에서는 ddl 생성을 지양하고 검증만 수행
+    show-sql: false
+  sql:
+    init:
+      platform: oracle
+
+server:
+  port: 8080 # 리눅스 환경 포트 설정
+  compression:
+    enabled: true # 트래픽 최적화(Gzip)

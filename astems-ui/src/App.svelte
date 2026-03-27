@@ -16,6 +16,7 @@
 
   onMount(async () => {
     try {
+      // Rust FB로부터 Astems.ini 데이터 수신
       const data = await invoke('get_ini_data')
       storeInfo = data as any
     } catch (e) {

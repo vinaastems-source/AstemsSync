@@ -26,8 +26,11 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     
-    // DB - 개발용 H2 인메모리
+    // DB - 개발용 H2 (인메모리)
     runtimeOnly("com.h2database:h2")
+    
+    // DB - 프로덕션용 Oracle (runtimeOnly로 설정하여 빌드 시 포함)
+    runtimeOnly("com.oracle.database.jdbc:ojdbc11")
     
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

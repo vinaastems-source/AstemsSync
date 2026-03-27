@@ -1,26 +1,11 @@
+spring:
+  profiles:
+    active: local # 개발 중에는 로컬 환경(H2) 사용
+
 server:
   port: 8080
-  servlet:
-    context-path: /
-
-spring:
-  application:
-    name: astems-server
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  datasource:
-    url: jdbc:h2:mem:astemsdb;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-
+  
 logging:
   level:
     com.vinaastems: DEBUG
+    org.hibernate.SQL: DEBUG

@@ -33,17 +33,19 @@ fn get_ini_data() -> Result<StoreInfo, String> {
   let mut ini_path = None;
   for p in paths {
       if p.exists() {
-          ini_path = Some(p);
+          ini_path = Some(p.to_path_buf());
           break;
       }
   }
 
-  let path = ini_path.ok_or("Astems.ini 파일을 찾을 수 없습니다.")?;
+  let path = ini_path.ok_or_else(|| "Astems.ini 파일을 찾을 수 없습니다.".to_string())?;
+  
+  // 타입 에러 해결을 위해 Result 명시적 처리
   let conf = Ini::load_from_file(path).map_err(|e| e.to_string())?;
   
-  let store_section = conf.section(Some("STORE")).ok_or("STORE 섹션을 찾을 수 없습니다.")?;
-  let pos_section = conf.section(Some("POS")).ok_or("POS 섹션을 찾을 수 없습니다.")?;
-  let version_section = conf.section(Some("VERSION")).ok_or("VERSION 섹션을 찾을 수 없습니다.")?;
+  let store_section = conf.section(Some("STORE")).ok_or_else(|| "STORE 섹션을 찾을 수 없습니다.".to_string())?;
+  let pos_section = conf.section(Some("POS")).ok_or_else(|| "POS 섹션을 찾을 수 없습니다.".to_string())?;
+  let version_section = conf.section(Some("VERSION")).ok_or_else(|| "VERSION 섹션을 찾을 수 없습니다.".to_string())?;
 
   Ok(StoreInfo {
     store_name: store_section.get("StoreName").unwrap_or("알수없는매장").to_string(),
@@ -57,7 +59,6 @@ fn get_ini_data() -> Result<StoreInfo, String> {
 async fn login(user_id: String, password: String) -> Result<String, String> {
   println!("로그인 시도: ID={}, PW=****", user_id);
   
-  // 시뮬레이션을 위해 잠시 대기
   tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
   
   if password == "1234" {
@@ -69,7 +70,6 @@ async fn login(user_id: String, password: String) -> Result<String, String> {
 
 #[tauri::command]
 async fn start_update(app: AppHandle) -> Result<(), String> {
-  // 백그라운드 스레드에서 업데이트 시뮬레이션 진행
   tauri::async_runtime::spawn(async move {
     let steps = [
         (10, "데이터 확인", "BF 서버로부터 새로운 업데이트 정보를 조회하고 있습니다."),
